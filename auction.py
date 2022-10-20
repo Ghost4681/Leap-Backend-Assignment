@@ -215,32 +215,34 @@ def place_bid(buyer_id, prodid):
             index = i
             break
     if index!=None:
-        if request_data['bid_value'] > 102/100*live_auctions[index]['current_price']: #checking for valid bid amount
-            start_date_time = live_auctions[index]['start_date'] + ' ' + live_auctions[index]['start_time']
-            sdt = dt.strptime(start_date_time, "%d/%m/%y %H:%M")
-            times_delayed = live_auctions[index]['times_delayed']
-            end_time = sdt + td(minutes=60) +td(minutes = times_delayed*10)
+        if live_auctions[index]['highest_bidder_id'] != buyer_id: #checking if the bidder is not already the highest bidder
+            if request_data['bid_value'] > 102/100*live_auctions[index]['current_price']: #checking for valid bid amount
+                start_date_time = live_auctions[index]['start_date'] + ' ' + live_auctions[index]['start_time']
+                sdt = dt.strptime(start_date_time, "%d/%m/%y %H:%M")
+                times_delayed = live_auctions[index]['times_delayed']
+                end_time = sdt + td(minutes=60) +td(minutes = times_delayed*10)
 
-            if times_delayed<100:
-                #checking if time of bidding is in last five minutes
-                if end_time-dt.now()<td(minutes=5):
-                    live_auctions[index]['times_delayed'] +=1
-                #bid placed 
-                if sdt < dt.now() < end_time:
-                    live_auctions[index]['current_price'] = request_data['bid_value']
-                    live_auctions[index]['highest_bidder_id'] = buyer_id 
+                if times_delayed<100:
+                    #checking if time of bidding is in last five minutes
+                    if end_time-dt.now()<td(minutes=5):
+                        live_auctions[index]['times_delayed'] +=1
+                    #bid placed 
+                    if sdt < dt.now() < end_time:
+                        live_auctions[index]['current_price'] = request_data['bid_value']
+                        live_auctions[index]['highest_bidder_id'] = buyer_id 
 
-                return jsonify(live_auctions[index])
-            
-            elif times_delayed==100:
-                #bid placed 
-                if dt.now()<end_time-td(minutes=5):
-                    live_auctions[index]['current_price'] = request_data['bid_value']
-                    live_auctions[index]['highest_bidder_id'] = buyer_id 
-                else:
-                    return jsonify({'message':"There is only five minutes remaining, you cannot bid anymore"})
-            return jsonify(live_auctions[index]) 
-        return jsonify({'message':'The bid value is too small/ invalid'})
+                    return jsonify(live_auctions[index])
+                
+                elif times_delayed==100:
+                    #bid placed 
+                    if dt.now()<end_time-td(minutes=5):
+                        live_auctions[index]['current_price'] = request_data['bid_value']
+                        live_auctions[index]['highest_bidder_id'] = buyer_id 
+                    else:
+                        return jsonify({'message':"There is only five minutes remaining, you cannot bid anymore"})
+                return jsonify(live_auctions[index]) 
+            return jsonify({'message':'The bid value is too small/ invalid'})
+        return jsonify({'message':'You are alerady the highest bidder'})
     return jsonify({'message':'Invalid Product code'})
 
 #view past bids
